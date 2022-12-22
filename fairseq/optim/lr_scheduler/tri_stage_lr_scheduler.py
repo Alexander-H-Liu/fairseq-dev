@@ -119,6 +119,7 @@ class TriStageLRSchedule(FairseqLRScheduler):
             if self.warmup_steps != 0
             else 0
         )
+        if self.decay_steps == 0: self.decay_steps = 1 # Note: temp hotfix, remove before merge
         self.decay_factor = -math.log(cfg.final_lr_scale) / self.decay_steps
 
         # initial learning rate
