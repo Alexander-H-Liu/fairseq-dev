@@ -35,8 +35,8 @@ mkdir -p $log_dir
 
 
 fairseq-hydra-train \
---config-dir $fairseq_root/examples/wav2vec/config/finetuning \
---config-name base_10h \
+--config-dir $config_path \
+--config-name $config \
 common.log_file=$log_dir/log.txt \
 common.tensorboard_logdir=$log_dir/tb \
 common.user_dir=$fairseq_root/examples/data2vec \
