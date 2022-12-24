@@ -1,0 +1,24 @@
+# @package _global_
+
+hydra:
+  sweep:
+    dir: ${env:LOG_DIR}
+    subdir: ''
+  launcher:
+    cpus_per_task: 10
+    gpus_per_node: 8
+    tasks_per_node: 8
+    nodes: 2
+    comment: null
+    mem_gb: 450
+    timeout_min: 4320
+    max_num_timeout: 30
+    constraint: volta32gb,ib4
+    name: ${hydra.job.config_name}/${hydra.job.override_dirname}
+    submitit_folder: ${hydra.sweep.dir}/submitit/%j
+    partition: learnlab,learnfair,devlab
+    exclude: learnfair7491,learnfair7477,learnfair7487
+
+distributed_training:
+  distributed_world_size: 16
+  distributed_port: 29671

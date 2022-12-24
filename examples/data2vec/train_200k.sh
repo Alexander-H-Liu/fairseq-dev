@@ -7,13 +7,13 @@ update_freq='[1]' # Avoid using update_freq>1 since codebook is updated per forw
 port=12347
 
 # Env (python env identical to data2vec)
-fairseq_root=/path/to/fairseq-dev
-data_root=/path/to/data # Path to data tsv files (libri 960hr)
+fairseq_root="/private/home/wnhsu/data2vec_quant/fairseq-dev"
+data_root="/checkpoint/wnhsu/data/hubert/manifests/pretrain/data/ls960/" # Path to data tsv files (libri 960hr)
 train_subset="train"
-valid_subset="dev-other" # tsv file name for validation
+valid_subset="dev_other" # tsv file name for validation
 
 # Log
-log_root=/path/to/store/log
+log_root="/checkpoint/wnhsu/projects/data2vec_quant/exps"
 log_interval=200
 save_every_n_updates=20000 # hopefully % 200k == 0
 keep_interval_updates=-1 # keep ckpts if space permit 
@@ -34,9 +34,12 @@ codebook_init_decay=0.9 # so far so good (unstable is caused by LR or teacher EM
 log_dir=$log_root/pretrain/base_discrete_v${codebook_size}_norm${normal_init_codebook}_k${top_k}_m${mask_prob}
 mkdir -p $log_dir
 
-fairseq-hydra-train \
+set -x
+PYTHONPATH=$(pwd):$(pwd)/examples LOG_DIR=${log_dir} \
+python fairseq_cli/hydra_train.py -m \
 --config-dir $fairseq_root/examples/data2vec/config/audio/pretraining \
 --config-name base_discrete_200k \
+hydra/launcher=submitit_slurm +run=slurm_2 \
 task.data=$data_root \
 dataset.train_subset=$train_subset \
 dataset.valid_subset=$valid_subset \
@@ -56,4 +59,4 @@ model.average_top_k_layers=$top_k \
 model.mask_prob=$mask_prob \
 model.freeze_codebook_step=$freeze_codebook_step \
 model.codebook_init_decay=$codebook_init_decay \
-+optimization.update_freq=$update_freq
++optimization.update_freq=$update_freq &
