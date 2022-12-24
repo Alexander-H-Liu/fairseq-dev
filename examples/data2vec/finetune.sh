@@ -2,7 +2,7 @@
 
 n_gpu_total=8
 n_cpu=6
-update_freq='[1]' # Avoid using update_freq>1 since codebook is updated per forward pass
+update_freq='[1]'
 port=12347
 
 # Env (python env identical to data2vec)
