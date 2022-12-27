@@ -182,6 +182,10 @@ class Wav2Vec2AsrConfig(FairseqDataclass):
     )
     ddp_backend: str = II("distributed_training.ddp_backend")
 
+    load_teacher_model: bool = field(
+        default=False, metadata={"help": "Finetune teacher model instead (for EMA-based model only)"}
+    )
+
 
 @dataclass
 class Wav2Vec2CtcConfig(Wav2Vec2AsrConfig):
@@ -461,6 +465,11 @@ class Wav2VecEncoder(FairseqEncoder):
 
             model.load_state_dict(new_big_dict, strict=False)
         else:
+            if cfg.load_teacher_model:
+                for k in state["model"]["_ema"].keys():
+                    assert "encoder."+k in state["model"].keys()
+                    # Replace student's weight with teacher's
+                    state["model"]["encoder."+k] = state["model"]["_ema"][k]
             if "_ema" in state["model"]:
                 del state["model"]["_ema"]
             model.load_state_dict(state["model"], strict=True)
