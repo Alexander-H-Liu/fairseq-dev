@@ -8,17 +8,16 @@ hydra:
     cpus_per_task: 10
     gpus_per_node: 8
     tasks_per_node: 8
-    nodes: 2
+    nodes: 1
     comment: null
-    mem_gb: 450
+    mem_gb: 250
     timeout_min: 4320
     max_num_timeout: 30
     constraint: volta32gb,ib4
-    name: d2v_pt
+    name: w2v_ft
     submitit_folder: ${hydra.sweep.dir}/submitit/%j
     partition: learnlab,learnfair,devlab
-    # exclude: learnfair7491,learnfair7477,learnfair7487
 
 distributed_training:
-  distributed_world_size: 16
+  distributed_world_size: 8
   distributed_port: 29671

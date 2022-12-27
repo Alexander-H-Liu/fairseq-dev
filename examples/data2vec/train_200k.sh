@@ -60,3 +60,25 @@ model.mask_prob=$mask_prob \
 model.freeze_codebook_step=$freeze_codebook_step \
 model.codebook_init_decay=$codebook_init_decay \
 +optimization.update_freq=$update_freq &
+
+# # NOTE: local debug
+# PYTHONPATH=$(pwd):$(pwd)/examples LOG_DIR=${log_dir} \
+# python fairseq_cli/hydra_train.py -m \
+# --config-dir $fairseq_root/examples/data2vec/config/audio/pretraining \
+# --config-name base_discrete_200k \
+# +run=local \
+# task.data=$data_root \
+# dataset.train_subset=$train_subset \
+# dataset.valid_subset=$valid_subset \
+# dataset.num_workers=$n_cpu \
+# common.log_interval=1 \
+# common.log_file=$log_dir/log.txt \
+# common.tensorboard_logdir=$log_dir/tb \
+# common.user_dir=$fairseq_root/examples/data2vec \
+# model.codebook_size=$codebook_size \
+# model.normal_init_codebook=$normal_init_codebook \
+# model.average_top_k_layers=$top_k \
+# model.mask_prob=$mask_prob \
+# model.freeze_codebook_step=$freeze_codebook_step \
+# model.codebook_init_decay=$codebook_init_decay \
+# +optimization.update_freq=$update_freq &
