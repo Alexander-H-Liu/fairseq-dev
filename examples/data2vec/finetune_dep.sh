@@ -31,7 +31,7 @@ config=base_10h # depending on {split}
 load_teacher_model=true # true: finetune teacher model; false: student
 
 # Paths and pre-trained checkpoints
-pretrain_ckpt_path="${dir}/checkpoints/checkpoint_last.pt"
+pretrain_ckpt_path="${dir}/ckpt/checkpoint_last.pt"
 log_dir="${dir}/finetune/10h/teacher${load_teacher_model}"
 
 mkdir -p $log_dir
