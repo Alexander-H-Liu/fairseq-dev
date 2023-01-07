@@ -17,10 +17,10 @@ update_freq='[1]'
 port=12347
 
 # Env (python env identical to data2vec)
-fairseq_root="/private/home/wnhsu/data2vec_quant/fairseq-dev"
-data_root="/checkpoint/wnhsu/data/librispeech/10h/raw" # Path to data tsv files (e.g., train 10hr)
-lm_path="/checkpoint/wnhsu/data/librispeech/lm_4gram/4-gram.bin" # I'm usomg official 4-gram.bin 
-lexicon_path="/checkpoint/wnhsu/data/librispeech/lm_4gram/lexicon_ltr.lst" # I'm using official librispeech_lexicon.lst
+fairseq_root="/data/home/wnhsu/fairseq_repos/fairseq-py-d2vq"
+data_root="/fsx-wav2vec/abaevski/data/libri/10h/wav2vec/raw" # Path to data tsv files (e.g., train 10hr)
+lm_path="/fsx-wav2vec/wnhsu/datasets/librispeech/lm_4gram/4-gram.bin" # I'm usomg official 4-gram.bin 
+lexicon_path="/fsx-wav2vec/wnhsu/datasets/librispeech/lm_4gram/lexicon_ltr.lst" # I'm using official librispeech_lexicon.lst
 
 # Finetuning options
 split="train" # finetuning {split}.tsv
@@ -32,19 +32,18 @@ load_teacher_model=true # true: finetune teacher model; false: student
 finetune_ckpts=( "checkpoint_214_200000.pt" "checkpoint_last.pt" ) # Eval @ 200k & 400k
 
 
-for ft_ckpt in ${finetune_ckpts[@]};do
+for ft_ckpt in ${finetune_ckpts[@]}; do
     # Paths and pre-trained checkpoints
     pretrain_ckpt_path="${dir}/ckpt/${ft_ckpt}"
     log_dir="${dir}/finetune/10h/${ft_ckpt}_teacher${load_teacher_model}"
 
     mkdir -p $log_dir
 
-    set -x
     PYTHONPATH=$(pwd):$(pwd)/examples LOG_DIR=${log_dir} \
     python fairseq_cli/hydra_train.py -m \
     --config-dir $config_path \
     --config-name $config \
-    hydra/launcher=submitit_slurm +run=slurm_1 $dep_str \
+    hydra/launcher=submitit_slurm +run=slurm_1_aws $dep_str \
     common.log_file=$log_dir/log.txt \
     common.tensorboard_logdir=$log_dir/tb \
     common.user_dir=$fairseq_root/examples/data2vec \
