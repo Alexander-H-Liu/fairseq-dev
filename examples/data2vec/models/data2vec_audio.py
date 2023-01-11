@@ -45,6 +45,9 @@ class Data2VecAudioConfig(Wav2Vec2Config):
     freeze_codebook_step: int = field(
         default=-1, metadata={"help": "step to freeze codebook, will also freeze teacher model"}
     )
+    freeze_pre_enc_modules: bool = field(
+        default=True, metadata={"help": "when freezing teacher, freeze the CNN extractor as well"}
+    )
 
 
     loss_beta: float = field(
@@ -154,6 +157,7 @@ class Data2VecAudioModel(BaseFairseqModel):
         self.encoder = TransformerEncoder(cfg)
         self.layer_norm = LayerNorm(self.extractor_embed)
 
+        self.pre_encoder_copied = False
         if self.discrete:
             assert cfg.instance_norm_target_layer
             assert not (cfg.layer_norm_targets or cfg.instance_norm_targets)
@@ -228,12 +232,37 @@ class Data2VecAudioModel(BaseFairseqModel):
             self.layer_norm.load_state_dict(self.shared_module_state_dict['layer_norm'])
             self.post_extract_proj.load_state_dict(self.shared_module_state_dict['post_extract_proj'])
 
+    def copy_shared_modules(self):
+        ema_config = EMAModuleConfig(
+            ema_decay=1,
+            ema_fp32=True,
+        )
+        self.cnn_copy = EMAModule(
+            self.feature_extractor,
+            ema_config,
+            skip_keys=set(),
+        )
+        self.ln_copy = EMAModule(
+            self.layer_norm,
+            ema_config,
+            skip_keys=set(),
+        )
+        self.proj_copy = EMAModule(
+            self.post_extract_proj,
+            ema_config,
+            skip_keys=set(),
+        )
+        self.pre_encoder_copied = True
+        logger.info(f"pre-encoder modules copied for teacher model")
 
     def set_num_updates(self, num_updates):
         super().set_num_updates(num_updates)
 
         if self.cfg.freeze_codebook_step!=-1 and num_updates>=self.cfg.freeze_codebook_step:
-            self.freeze_shared_modules()
+            if self.cfg.freeze_pre_enc_modules:
+                self.freeze_shared_modules()
+            else:
+                self.copy_shared_modules()
             self.ema.set_decay(1) # Force teacher model to freeze as well
             self.cfg.ema_end_decay = 1
             self.cfg.ema_decay = 1
@@ -284,6 +313,11 @@ class Data2VecAudioModel(BaseFairseqModel):
             for i in range(self.n_codebooks):
                 state[prefix+f'_codebook{i}'] = self.codebooks[i]
                 state[prefix+f'_codebook_cnts{i}'] = self.codebook_cnts[i]
+        
+        if self.pre_encoder_copied:
+            state[prefix+'_pre_encoder_cnn'] = self.cnn_copy.fp32_params
+            state[prefix+'_pre_encoder_ln'] = self.ln_copy.fp32_params
+            state[prefix+'_pre_encoder_proj'] = self.proj_copy.fp32_params
 
         return state
 
@@ -304,6 +338,18 @@ class Data2VecAudioModel(BaseFairseqModel):
                 assert k in state_dict
                 self.codebook_cnts[i] = state_dict[k].contiguous()
                 del state_dict[k]
+        
+        k = prefix+'_pre_encoder_cnn'
+        if self.pre_encoder_copied:
+            assert k in state_dict
+            self.cnn_copy.restore(state_dict[k],True)
+            del state_dict[k]
+            k = prefix+'_pre_encoder_ln'
+            self.ln_copy.restore(state_dict[k],True)
+            del state_dict[k]
+            k = prefix+'_pre_encoder_proj'
+            self.proj_copy.restore(state_dict[k],True)
+            del state_dict[k]
         return super()._load_from_state_dict(state_dict, prefix, *args, **kwargs)
 
     @classmethod
@@ -451,7 +497,17 @@ class Data2VecAudioModel(BaseFairseqModel):
             features = self.post_extract_proj(features)
 
         pre_encoder_features = None
-        if self.cfg.ema_transformer_only:
+        if self.pre_encoder_copied:
+            # Copied pre-encoder modules used for teacher model
+            self.cnn_copy.model.eval()
+            self.ln_copy.model.eval()
+            self.proj_copy.model.eval()
+            with torch.no_grad():
+                pre_encoder_features = self.cnn_copy.model(source)
+                pre_encoder_features = pre_encoder_features.transpose(1, 2)
+                pre_encoder_features = self.ln_copy.model(pre_encoder_features)
+                pre_encoder_features = self.proj_copy.model(pre_encoder_features) 
+        elif self.cfg.ema_transformer_only:
             pre_encoder_features = features.clone()
 
         features = self.dropout_input(features)
