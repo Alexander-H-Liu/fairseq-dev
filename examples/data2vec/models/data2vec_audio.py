@@ -263,7 +263,7 @@ class Data2VecAudioModel(BaseFairseqModel):
                 self.freeze_shared_modules()
             else:
                 self.copy_shared_modules()
-            self.ema.set_decay(1) # Force teacher model to freeze as well
+            # self.ema.set_decay(1) # Force teacher model to freeze as well
             self.cfg.ema_end_decay = 1
             self.cfg.ema_decay = 1
 
