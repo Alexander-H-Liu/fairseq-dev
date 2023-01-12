@@ -13,7 +13,8 @@ mask_probs=( "0.70" "0.80" )
 normal_init_codebook=true
 codebook_init_decay=0.6 # 0.9?
 codebook_size=350
-top_k=8
+top_k=10
+
 for mask_prob in ${mask_probs[@]}; do
     for freeze_teacher_step in ${freeze_teacher_steps[@]}; do
         for final_lr_scale in ${final_lr_scales[@]};do
