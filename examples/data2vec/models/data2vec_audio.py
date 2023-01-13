@@ -253,7 +253,7 @@ class Data2VecAudioModel(BaseFairseqModel):
             skip_keys=set(),
         )
         self.pre_encoder_copied = True
-        logger.info(f"pre-encoder modules copied for teacher model")
+        logger.debug(f"pre-encoder modules copied for teacher model")
 
     def set_num_updates(self, num_updates):
         super().set_num_updates(num_updates)
