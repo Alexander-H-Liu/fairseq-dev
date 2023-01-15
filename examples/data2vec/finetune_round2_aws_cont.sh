@@ -21,9 +21,7 @@ for mask_prob in ${mask_probs[@]}; do
             for freeze_pre_enc_module in ${freeze_pre_enc_modules[@]};do
                 # Copy 200k checkpoint to resume
                 log_dir=$log_root/pretrain_400k/base_discrete_v${codebook_size}_norm${normal_init_codebook}_k${top_k}_m${mask_prob}_cbdec${codebook_init_decay}_flrs${final_lr_scale}_fpem${freeze_pre_enc_module}_freeze${freeze_teacher_step}
-                mkdir -p $log_dir/ckpt/
-                cp $resume_ckpt $log_dir/ckpt/checkpoint_last.pt
-                zsh examples/data2vec/train_400k_aws_cont_cascade_tune.sh $codebook_size $top_k $normal_init_codebook $mask_prob $codebook_init_decay $final_lr_scale $freeze_pre_enc_module $freeze_teacher_step
+                zsh examples/data2vec/finetune_400k_cont_aws.sh $log_dir
             done
         done
     done
