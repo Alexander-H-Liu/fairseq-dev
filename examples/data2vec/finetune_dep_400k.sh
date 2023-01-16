@@ -27,7 +27,7 @@ split="train" # finetuning {split}.tsv
 valid_subset="dev_other" # tsv file name for validation
 config_path=$fairseq_root/examples/wav2vec/config/finetuning/ # might wanna try hubert config in the furture
 config=base_10h # depending on {split}
-load_teacher_model=true # true: finetune teacher model; false: student
+load_teacher_model=false # true: finetune teacher model; false: student
 
 finetune_ckpts=( "checkpoint_214_200000.pt" "checkpoint_last.pt" ) # Eval @ 200k & 400k
 
