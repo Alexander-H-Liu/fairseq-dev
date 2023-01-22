@@ -29,17 +29,16 @@ config_path=$fairseq_root/examples/wav2vec/config/finetuning/ # might wanna try 
 config=base_10h # depending on {split}
 load_teacher_model=false # true: finetune teacher model; false: student
 
-finetune_ckpts=( "checkpoint_214_200000.pt" "checkpoint_last.pt" ) # Eval @ 200k & 400k
+finetune_ckpts=( "checkpoint_last.pt" ) # Eval @ 400k
 
 
-for ft_ckpt in ${finetune_ckpts[@]};do
+for ft_ckpt in ${finetune_ckpts[@]}; do
     # Paths and pre-trained checkpoints
     pretrain_ckpt_path="${dir}/ckpt/${ft_ckpt}"
     log_dir="${dir}/finetune/10h/${ft_ckpt}_teacher${load_teacher_model}"
 
     mkdir -p $log_dir
 
-    set -x
     PYTHONPATH=$(pwd):$(pwd)/examples LOG_DIR=${log_dir} \
     python fairseq_cli/hydra_train.py -m \
     --config-dir $config_path \
