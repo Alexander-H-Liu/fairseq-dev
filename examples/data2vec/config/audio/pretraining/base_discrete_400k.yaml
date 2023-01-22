@@ -68,7 +68,8 @@ model:
   average_top_k_layers: 8
   normal_init_codebook: false
   codebook_init_decay: 0.9
-  freeze_codebook_step: 200000
+  freeze_codebook_step: 200001
+  freeze_pre_enc_modules: true
 
   instance_norm_target_layer: true
 

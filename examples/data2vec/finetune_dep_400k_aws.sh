@@ -29,7 +29,7 @@ config_path=$fairseq_root/examples/wav2vec/config/finetuning/ # might wanna try 
 config=base_10h # depending on {split}
 load_teacher_model=false # true: finetune teacher model; false: student
 
-finetune_ckpts=( "checkpoint_last.pt" ) # Eval @ 200k & 400k  "checkpoint_214_200000.pt"
+finetune_ckpts=( "checkpoint_last.pt" ) # Eval @ 400k 
 
 
 for ft_ckpt in ${finetune_ckpts[@]}; do

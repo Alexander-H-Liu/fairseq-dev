@@ -233,27 +233,28 @@ class Data2VecAudioModel(BaseFairseqModel):
             self.post_extract_proj.load_state_dict(self.shared_module_state_dict['post_extract_proj'])
 
     def copy_shared_modules(self):
-        ema_config = EMAModuleConfig(
-            ema_decay=1,
-            ema_fp32=True,
-        )
-        self.cnn_copy = EMAModule(
-            self.feature_extractor,
-            ema_config,
-            skip_keys=set(),
-        )
-        self.ln_copy = EMAModule(
-            self.layer_norm,
-            ema_config,
-            skip_keys=set(),
-        )
-        self.proj_copy = EMAModule(
-            self.post_extract_proj,
-            ema_config,
-            skip_keys=set(),
-        )
-        self.pre_encoder_copied = True
-        logger.debug(f"pre-encoder modules copied for teacher model")
+        if not self.pre_encoder_copied:
+            ema_config = EMAModuleConfig(
+                ema_decay=1,
+                ema_fp32=True,
+            )
+            self.cnn_copy = EMAModule(
+                self.feature_extractor,
+                ema_config,
+                skip_keys=set(),
+            )
+            self.ln_copy = EMAModule(
+                self.layer_norm,
+                ema_config,
+                skip_keys=set(),
+            )
+            self.proj_copy = EMAModule(
+                self.post_extract_proj,
+                ema_config,
+                skip_keys=set(),
+            )
+            self.pre_encoder_copied = True
+            logger.debug(f"pre-encoder modules copied for teacher model")
 
     def set_num_updates(self, num_updates):
         super().set_num_updates(num_updates)
@@ -265,7 +266,9 @@ class Data2VecAudioModel(BaseFairseqModel):
                 self.copy_shared_modules()
             # self.ema.set_decay(1) # Force teacher model to freeze as well
             self.cfg.ema_end_decay = 1
-            self.cfg.ema_decay = 1
+            # self.cfg.ema_decay = 1
+            self.cfg.codebook_init_decay = 1
+            self.cfg.codebook_end_decay = 1
 
         if self.ema is None and (self.discrete or self.final_proj is not None):
             logger.info(f"making ema teacher")
